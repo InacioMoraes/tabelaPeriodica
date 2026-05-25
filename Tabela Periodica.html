@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tabela Periódica Interativa</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,#1e3a8a,#020617 60%);color:#f8fafc}
+header{text-align:center;padding:28px 14px;background:linear-gradient(135deg,#2563eb,#7c3aed)}
+header h1{margin:0;font-size:clamp(1.7rem,4vw,3rem)}
+header p{max-width:900px;margin:10px auto 0;color:#dbeafe}
+.barra{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:1fr 260px;gap:10px;padding:12px;background:rgba(2,6,23,.94);backdrop-filter:blur(10px)}
+input,select{padding:13px;border-radius:14px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:1rem}
+main{padding:18px;max-width:1500px;margin:auto}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-bottom:18px}
+.card{background:rgba(15,23,42,.9);border:1px solid #334155;border-radius:20px;padding:16px;box-shadow:0 10px 25px #0008}
+.card h2{margin-top:0}
+.card p{color:#cbd5e1;line-height:1.5}
+.legenda{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:18px 0}
+.chip{padding:8px 10px;border-radius:999px;font-size:.82rem;color:#07111f;font-weight:bold}
+.tabela{display:grid;grid-template-columns:repeat(18,minmax(58px,1fr));grid-auto-rows:78px;gap:7px;overflow:auto;padding-bottom:25px}
+.el{border:0;border-radius:13px;padding:6px;text-align:center;color:#07111f;cursor:pointer;box-shadow:0 8px 16px #0007;transition:.2s}
+.el:hover{transform:translateY(-5px) scale(1.04);z-index:2}
+.n{font-size:.7rem;text-align:left;font-weight:bold}
+.s{font-size:1.45rem;font-weight:900}
+.nome{font-size:.58rem;font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.massa{font-size:.56rem;opacity:.8}
+.alcalino{background:#ff6b6b}.alcalino-terroso{background:#ffb347}.transicao{background:#ffd166}.pos{background:#4dd0e1}.semimetal{background:#80ed99}.naometal{background:#90caf9}.halogenio{background:#c77dff}.nobre{background:#9bf6ff}.lantanideo{background:#b8f2e6}.actinideo{background:#f7aef8}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:20;align-items:center;justify-content:center;padding:16px}
+.box{max-width:680px;width:100%;background:#0f172a;border:1px solid #334155;border-radius:24px;padding:24px;box-shadow:0 20px 70px #000}
+.fechar{float:right;border:0;background:#ef4444;color:#fff;border-radius:50%;width:38px;height:38px;font-size:1.4rem;font-weight:bold;cursor:pointer}
+.linha{display:grid;grid-template-columns:170px 1fr;gap:8px;margin:12px 0}
+.linha strong{color:#93c5fd}
+footer{text-align:center;color:#cbd5e1;padding:25px}
+@media(max-width:900px){.barra{grid-template-columns:1fr}.tabela{grid-template-columns:repeat(18,58px)}}
+</style>
+</head>
+<body>
+<header>
+<h1>🧪 Tabela Periódica Interativa</h1>
+<p>Clique nos elementos para consultar número atômico, massa aproximada, classe química e aplicações no cotidiano.</p>
+</header>
+
+<div class="barra">
+<input id="pesquisa" placeholder="Pesquisar por nome, símbolo ou número atômico...">
+<select id="filtro"><option value="">Todas as classes</option></select>
+</div>
+
+<main>
+<section class="info">
+<div class="card"><h2>Como usar</h2><p>Pesquise, filtre por classe ou clique em um elemento para abrir sua ficha completa.</p></div>
+<div class="card"><h2>Uso via QR-Code</h2><p>Salve como <b>tabela_periodica_interativa.html</b>, hospede online e gere um QR-Code com o link público.</p></div>
+<div class="card"><h2>Objetivo</h2><p>Facilitar o estudo da Tabela Periódica de forma visual, interativa e aplicada ao cotidiano.</p></div>
+</section>
+
+<div id="legenda" class="legenda"></div>
+<section id="tabela" class="tabela"></section>
+</main>
+
+<div id="modal" class="modal">
+<div class="box">
+<button class="fechar" onclick="fechar()">×</button>
+<h2 id="mt"></h2>
+<div class="linha"><strong>Símbolo:</strong><span id="ms"></span></div>
+<div class="linha"><strong>Número atômico:</strong><span id="mn"></span></div>
+<div class="linha"><strong>Massa aproximada:</strong><span id="mm"></span></div>
+<div class="linha"><strong>Classificação:</strong><span id="mc"></span></div>
+<div class="linha"><strong>Aplicações:</strong><span id="mu"></span></div>
+</div>
+</div>
+
+<footer>Simulador didático de Química — Tabela Periódica Interativa</footer>
+
+<script>
+const elementos=[
+[1,"H","Hidrogênio","1,008","Não metal","naometal",1,1,"Células de combustível, produção de amônia e combustíveis limpos."],
+[2,"He","Hélio","4,003","Gás nobre","nobre",1,18,"Balões, criogenia e resfriamento de equipamentos médicos."],
+[3,"Li","Lítio","6,94","Metal alcalino","alcalino",2,1,"Baterias recarregáveis de celulares, notebooks e carros elétricos."],
+[4,"Be","Berílio","9,012","Metal alcalino-terroso","alcalino-terroso",2,2,"Ligas leves, equipamentos aeroespaciais e janelas de raios X."],
+[5,"B","Boro","10,81","Semimetal","semimetal",2,13,"Vidros resistentes ao calor, detergentes, fertilizantes e semicondutores."],
+[6,"C","Carbono","12,011","Não metal","naometal",2,14,"Grafite, diamante, carvão, plásticos e moléculas dos seres vivos."],
+[7,"N","Nitrogênio","14,007","Não metal","naometal",2,15,"Fertilizantes, atmosfera, conservação de alimentos e nitrogênio líquido."],
+[8,"O","Oxigênio","15,999","Não metal","naometal",2,16,"Respiração, hospitais, combustão e tratamento de água."],
+[9,"F","Flúor","18,998","Halogênio","halogenio",2,17,"Cremes dentais, prevenção de cáries e materiais fluorados."],
+[10,"Ne","Neônio","20,180","Gás nobre","nobre",2,18,"Letreiros luminosos, lâmpadas especiais e indicadores visuais."],
+[11,"Na","Sódio","22,990","Metal alcalino","alcalino",3,1,"Sal de cozinha, lâmpadas de vapor e processos industriais."],
+[12,"Mg","Magnésio","24,305","Metal alcalino-terroso","alcalino-terroso",3,2,"Ligas leves, fogos de artifício e suplementos minerais."],
+[13,"Al","Alumínio","26,982","Metal pós-transição","pos",3,13,"Latas, panelas, aviões, esquadrias e embalagens."],
+[14,"Si","Silício","28,085","Semimetal","semimetal",3,14,"Chips, painéis solares, vidro, cerâmica e eletrônicos."],
+[15,"P","Fósforo","30,974","Não metal","naometal",3,15,"Fertilizantes, palitos de fósforo, DNA e ATP."],
+[16,"S","Enxofre","32,06","Não metal","naometal",3,16,"Fertilizantes, medicamentos, fungicidas e borracha vulcanizada."],
+[17,"Cl","Cloro","35,45","Halogênio","halogenio",3,17,"Tratamento de água, limpeza, desinfecção e PVC."],
+[18,"Ar","Argônio","39,948","Gás nobre","nobre",3,18,"Soldagem, lâmpadas e atmosferas inertes."],
+[19,"K","Potássio","39,098","Metal alcalino","alcalino",4,1,"Fertilizantes, funcionamento muscular e sais minerais."],
+[20,"Ca","Cálcio","40,078","Metal alcalino-terroso","alcalino-terroso",4,2,"Ossos, dentes, cimento, cal e suplementação."],
+[21,"Sc","Escândio","44,956","Metal de transição","transicao",4,3,"Ligas leves de alto desempenho e equipamentos esportivos."],
+[22,"Ti","Titânio","47,867","Metal de transição","transicao",4,4,"Próteses, implantes, aviões e tintas."],
+[23,"V","Vanádio","50,942","Metal de transição","transicao",4,5,"Aços especiais, ferramentas e baterias de fluxo."],
+[24,"Cr","Cromo","51,996","Metal de transição","transicao",4,6,"Aço inoxidável, cromagem e proteção contra corrosão."],
+[25,"Mn","Manganês","54,938","Metal de transição","transicao",4,7,"Aços, pilhas, baterias e ligas metálicas."],
+[26,"Fe","Ferro","55,845","Metal de transição","transicao",4,8,"Aço, construção civil, máquinas, veículos e hemoglobina."],
+[27,"Co","Cobalto","58,933","Metal de transição","transicao",4,9,"Baterias, ímãs, pigmentos azuis e ligas especiais."],
+[28,"Ni","Níquel","58,693","Metal de transição","transicao",4,10,"Moedas, aço inoxidável, baterias e revestimentos."],
+[29,"Cu","Cobre","63,546","Metal de transição","transicao",4,11,"Fios elétricos, motores, encanamentos, bronze e latão."],
+[30,"Zn","Zinco","65,38","Metal de transição","transicao",4,12,"Galvanização, pilhas, ligas metálicas e suplementos."],
+[31,"Ga","Gálio","69,723","Metal pós-transição","pos",4,13,"LEDs, semicondutores, painéis solares e termômetros especiais."],
+[32,"Ge","Germânio","72,630","Semimetal","semimetal",4,14,"Fibras ópticas, semicondutores e sensores infravermelhos."],
+[33,"As","Arsênio","74,922","Semimetal","semimetal",4,15,"Semicondutores e ligas; substância tóxica que exige controle."],
+[34,"Se","Selênio","78,971","Não metal","naometal",4,16,"Fotocélulas, fabricação de vidro e suplementos em pequena quantidade."],
+[35,"Br","Bromo","79,904","Halogênio","halogenio",4,17,"Produtos fotográficos, retardantes de chama e medicamentos."],
+[36,"Kr","Criptônio","83,798","Gás nobre","nobre",4,18,"Lâmpadas especiais, flashes fotográficos e lasers."],
+[37,"Rb","Rubídio","85,468","Metal alcalino","alcalino",5,1,"Relógios atômicos, pesquisas científicas e células fotoelétricas."],
+[38,"Sr","Estrôncio","87,62","Metal alcalino-terroso","alcalino-terroso",5,2,"Fogos vermelhos, cerâmicas e materiais luminescentes."],
+[39,"Y","Ítrio","88,906","Metal de transição","transicao",5,3,"LEDs, lasers, cerâmicas avançadas e telas."],
+[40,"Zr","Zircônio","91,224","Metal de transição","transicao",5,4,"Reatores nucleares, cerâmicas, joias e materiais resistentes ao calor."],
+[41,"Nb","Nióbio","92,906","Metal de transição","transicao",5,5,"Aços especiais, superligas, pontes, turbinas e tecnologia aeroespacial."],
+[42,"Mo","Molibdênio","95,95","Metal de transição","transicao",5,6,"Aços resistentes, lubrificantes, catalisadores e ferramentas."],
+[43,"Tc","Tecnécio","98","Metal de transição","transicao",5,7,"Medicina nuclear, principalmente exames de imagem."],
+[44,"Ru","Rutênio","101,07","Metal de transição","transicao",5,8,"Contatos elétricos, catalisadores e ligas resistentes."],
+[45,"Rh","Ródio","102,91","Metal de transição","transicao",5,9,"Catalisadores automotivos, joias e revestimentos reflexivos."],
+[46,"Pd","Paládio","106,42","Metal de transição","transicao",5,10,"Catalisadores, eletrônica, odontologia e joalheria."],
+[47,"Ag","Prata","107,87","Metal de transição","transicao",5,11,"Joias, contatos elétricos, espelhos e materiais antimicrobianos."],
+[48,"Cd","Cádmio","112,41","Metal de transição","transicao",5,12,"Baterias especiais e pigmentos; uso controlado por toxicidade."],
+[49,"In","Índio","114,82","Metal pós-transição","pos",5,13,"Telas sensíveis ao toque, soldas e semicondutores."],
+[50,"Sn","Estanho","118,71","Metal pós-transição","pos",5,14,"Soldas, ligas, revestimento de latas e bronze."],
+[51,"Sb","Antimônio","121,76","Semimetal","semimetal",5,15,"Retardantes de chama, ligas e semicondutores."],
+[52,"Te","Telúrio","127,60","Semimetal","semimetal",5,16,"Painéis solares, ligas metálicas e semicondutores."],
+[53,"I","Iodo","126,90","Halogênio","halogenio",5,17,"Sal iodado, antissépticos e funcionamento da tireoide."],
+[54,"Xe","Xenônio","131,29","Gás nobre","nobre",5,18,"Faróis, flashes, anestesia e lâmpadas especiais."],
+[55,"Cs","Césio","132,91","Metal alcalino","alcalino",6,1,"Relógios atômicos, sensores e aplicações científicas."],
+[56,"Ba","Bário","137,33","Metal alcalino-terroso","alcalino-terroso",6,2,"Contraste radiológico, fogos verdes e vidros especiais."],
+[57,"La","Lantânio","138,91","Lantanídeo","lantanideo",6,3,"Lentes ópticas, baterias e catalisadores."],
+[58,"Ce","Cério","140,12","Lantanídeo","lantanideo",8,4,"Catalisadores, polimento de vidro e ligas pirofóricas."],
+[59,"Pr","Praseodímio","140,91","Lantanídeo","lantanideo",8,5,"Ímãs, ligas e vidros coloridos."],
+[60,"Nd","Neodímio","144,24","Lantanídeo","lantanideo",8,6,"Ímãs potentes usados em fones, motores e turbinas eólicas."],
+[61,"Pm","Promécio","145","Lantanídeo","lantanideo",8,7,"Fontes luminosas especiais e pesquisas nucleares."],
+[62,"Sm","Samário","150,36","Lantanídeo","lantanideo",8,8,"Ímãs, lasers e reatores nucleares."],
+[63,"Eu","Európio","151,96","Lantanídeo","lantanideo",8,9,"Telas, LEDs, notas de dinheiro e pigmentos fluorescentes."],
+[64,"Gd","Gadolínio","157,25","Lantanídeo","lantanideo",8,10,"Contraste em ressonância magnética e materiais magnéticos."],
+[65,"Tb","Térbio","158,93","Lantanídeo","lantanideo",8,11,"Telas, lâmpadas, sensores e ligas especiais."],
+[66,"Dy","Disprósio","162,50","Lantanídeo","lantanideo",8,12,"Ímãs resistentes ao calor e tecnologias de energia."],
+[67,"Ho","Hólmio","164,93","Lantanídeo","lantanideo",8,13,"Lasers médicos e materiais magnéticos."],
+[68,"Er","Érbio","167,26","Lantanídeo","lantanideo",8,14,"Fibras ópticas, lasers e vidros coloridos."],
+[69,"Tm","Túlio","168,93","Lantanídeo","lantanideo",8,15,"Lasers, aparelhos portáteis de raio X e pesquisa."],
+[70,"Yb","Itérbio","173,05","Lantanídeo","lantanideo",8,16,"Relógios atômicos, lasers e ligas especiais."],
+[71,"Lu","Lutécio","174,97","Lantanídeo","lantanideo",8,17,"Medicina nuclear, catalisadores e pesquisa científica."],
+[72,"Hf","Háfnio","178,49","Metal de transição","transicao",6,4,"Reatores nucleares, microchips e superligas."],
+[73,"Ta","Tântalo","180,95","Metal de transição","transicao",6,5,"Capacitores, implantes, eletrônicos e ligas resistentes."],
+[74,"W","Tungstênio","183,84","Metal de transição","transicao",6,6,"Filamentos, ferramentas de corte e ligas muito resistentes."],
+[75,"Re","Rênio","186,21","Metal de transição","transicao",6,7,"Turbinas, catalisadores e superligas de alta temperatura."],
+[76,"Os","Ósmio","190,23","Metal de transição","transicao",6,8,"Ligas duras, pontas de instrumentos e contatos elétricos."],
+[77,"Ir","Irídio","192,22","Metal de transição","transicao",6,9,"Velas de ignição, cadinhos e equipamentos resistentes à corrosão."],
+[78,"Pt","Platina","195,08","Metal de transição","transicao",6,10,"Joias, catalisadores, medicina e sensores."],
+[79,"Au","Ouro","196,97","Metal de transição","transicao",6,11,"Joias, eletrônica, odontologia e reserva de valor."],
+[80,"Hg","Mercúrio","200,59","Metal de transição","transicao",6,12,"Instrumentos antigos e lâmpadas; uso controlado por toxicidade."],
+[81,"Tl","Tálio","204,38","Metal pós-transição","pos",6,13,"Detectores e pesquisas; altamente tóxico."],
+[82,"Pb","Chumbo","207,2","Metal pós-transição","pos",6,14,"Baterias automotivas, blindagem contra radiação e ligas."],
+[83,"Bi","Bismuto","208,98","Metal pós-transição","pos",6,15,"Medicamentos, cosméticos e ligas de baixo ponto de fusão."],
+[84,"Po","Polônio","209","Semimetal","semimetal",6,16,"Fontes especiais de calor e pesquisa; altamente radioativo."],
+[85,"At","Ástato","210","Halogênio","halogenio",6,17,"Pesquisa médica e nuclear; elemento raro e radioativo."],
+[86,"Rn","Radônio","222","Gás nobre","nobre",6,18,"Pesquisa; gás radioativo monitorado em ambientes fechados."],
+[87,"Fr","Frâncio","223","Metal alcalino","alcalino",7,1,"Pesquisa científica; extremamente raro e radioativo."],
+[88,"Ra","Rádio","226","Metal alcalino-terroso","alcalino-terroso",7,2,"Pesquisa e aplicações históricas; radioativo."],
+[89,"Ac","Actínio","227","Actinídeo","actinideo",7,3,"Medicina nuclear experimental e pesquisa."],
+[90,"Th","Tório","232,04","Actinídeo","actinideo",9,4,"Pesquisa em energia nuclear e ligas especiais."],
+[91,"Pa","Protactínio","231,04","Actinídeo","actinideo",9,5,"Pesquisa científica; raro e radioativo."],
+[92,"U","Urânio","238,03","Actinídeo","actinideo",9,6,"Combustível nuclear, pesquisa e datação geológica."],
+[93,"Np","Netúnio","237","Actinídeo","actinideo",9,7,"Pesquisa nuclear e produção de plutônio."],
+[94,"Pu","Plutônio","244","Actinídeo","actinideo",9,8,"Energia nuclear, sondas espaciais e pesquisa."],
+[95,"Am","Amerício","243","Actinídeo","actinideo",9,9,"Detectores de fumaça e instrumentos de medição."],
+[96,"Cm","Cúrio","247","Actinídeo","actinideo",9,10,"Pesquisa nuclear e fontes de energia especiais."],
+[97,"Bk","Berquélio","247","Actinídeo","actinideo",9,11,"Pesquisa científica e síntese de elementos."],
+[98,"Cf","Califórnio","251","Actinídeo","actinideo",9,12,"Detectores, análise de materiais e fontes de nêutrons."],
+[99,"Es","Einstênio","252","Actinídeo","actinideo",9,13,"Pesquisa científica e produção de elementos pesados."],
+[100,"Fm","Férmio","257","Actinídeo","actinideo",9,14,"Pesquisa nuclear básica."],
+[101,"Md","Mendelévio","258","Actinídeo","actinideo",9,15,"Pesquisa científica."],
+[102,"No","Nobélio","259","Actinídeo","actinideo",9,16,"Pesquisa científica."],
+[103,"Lr","Laurêncio","266","Actinídeo","actinideo",9,17,"Pesquisa científica."],
+[104,"Rf","Rutherfórdio","267","Metal de transição","transicao",7,4,"Pesquisa em química nuclear."],
+[105,"Db","Dúbnio","268","Metal de transição","transicao",7,5,"Pesquisa em elementos superpesados."],
+[106,"Sg","Seabórgio","269","Metal de transição","transicao",7,6,"Pesquisa em elementos superpesados."],
+[107,"Bh","Bóhrio","270","Metal de transição","transicao",7,7,"Pesquisa em elementos superpesados."],
+[108,"Hs","Hássio","277","Metal de transição","transicao",7,8,"Pesquisa em elementos superpesados."],
+[109,"Mt","Meitnério","278","Metal de transição","transicao",7,9,"Pesquisa científica; elemento sintético."],
+[110,"Ds","Darmstádtio","281","Metal de transição","transicao",7,10,"Pesquisa científica; elemento sintético."],
+[111,"Rg","Roentgênio","282","Metal de transição","transicao",7,11,"Pesquisa científica; elemento sintético."],
+[112,"Cn","Copernício","285","Metal de transição","transicao",7,12,"Pesquisa científica; elemento sintético."],
+[113,"Nh","Nihônio","286","Metal pós-transição","pos",7,13,"Pesquisa científica; elemento sintético."],
+[114,"Fl","Fleróvio","289","Metal pós-transição","pos",7,14,"Pesquisa científica; elemento sintético."],
+[115,"Mc","Moscóvio","290","Metal pós-transição","pos",7,15,"Pesquisa científica; elemento sintético."],
+[116,"Lv","Livermório","293","Metal pós-transição","pos",7,16,"Pesquisa científica; elemento sintético."],
+[117,"Ts","Tenessino","294","Halogênio","halogenio",7,17,"Pesquisa científica; elemento sintético."],
+[118,"Og","Oganessônio","294","Gás nobre","nobre",7,18,"Pesquisa científica; elemento sintético."]
+];
+
+const tabela=document.getElementById("tabela");
+const pesquisa=document.getElementById("pesquisa");
+const filtro=document.getElementById("filtro");
+const legenda=document.getElementById("legenda");
+
+const classes=[...new Set(elementos.map(e=>e[4]))];
+const cores={
+"Metal alcalino":"alcalino",
+"Metal alcalino-terroso":"alcalino-terroso",
+"Metal de transição":"transicao",
+"Metal pós-transição":"pos",
+"Semimetal":"semimetal",
+"Não metal":"naometal",
+"Halogênio":"halogenio",
+"Gás nobre":"nobre",
+"Lantanídeo":"lantanideo",
+"Actinídeo":"actinideo"
+};
+
+classes.forEach(cl=>{
+ let op=document.createElement("option");
+ op.value=cl;op.textContent=cl;filtro.appendChild(op);
+ let sp=document.createElement("span");
+ sp.className="chip "+cores[cl];sp.textContent=cl;legenda.appendChild(sp);
+});
+
+function renderizar(){
+ const termo=pesquisa.value.toLowerCase().trim();
+ const fil=filtro.value;
+ tabela.innerHTML="";
+ elementos.filter(e=>{
+  const txt=`${e[0]} ${e[1]} ${e[2]} ${e[4]}`.toLowerCase();
+  return txt.includes(termo)&&(!fil||e[4]===fil);
+ }).forEach(e=>{
+  const b=document.createElement("button");
+  b.className="el "+e[5];
+  b.style.gridRow=e[6];
+  b.style.gridColumn=e[7];
+  b.innerHTML=`<div class="n">${e[0]}</div><div class="s">${e[1]}</div><div class="nome">${e[2]}</div><div class="massa">${e[3]}</div>`;
+  b.onclick=()=>abrir(e);
+  tabela.appendChild(b);
+ });
+}
+
+function abrir(e){
+ document.getElementById("mt").textContent=e[2];
+ document.getElementById("ms").textContent=e[1];
+ document.getElementById("mn").textContent=e[0];
+ document.getElementById("mm").textContent=e[3];
+ document.getElementById("mc").textContent=e[4];
+ document.getElementById("mu").textContent=e[8];
+ document.getElementById("modal").style.display="flex";
+}
+
+function fechar(){document.getElementById("modal").style.display="none"}
+document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")fechar()}
+pesquisa.oninput=renderizar;
+filtro.onchange=renderizar;
+renderizar();
+</script>
+</body>
+</html>
